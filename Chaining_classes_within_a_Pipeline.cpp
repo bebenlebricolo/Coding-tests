@@ -18,6 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Author : bebenlebricolo
 // Date: 04/12/2017 (dd/mm/yyyy)
 
+// Version	|	date	|	comment
+//	v 0.1	| 04/12/2017| First tests / release of this test program
+//  v 0.2	| 05/12/2017| Small improvements - added modification tracking (Pipeline) and Pipeline object handles bypassing management of elements
+
 // Using a Pipeline to transform a value (input) in a given order.
 // Pipeline may point toward certain PipelineElement values (array of them)
 // This may be used to chain several functions or classes and process them all at once.
@@ -35,11 +39,20 @@ public:
 	PipelineElement():value(0),bypass(false){}
 	PipelineElement(int a) : value(a),bypass(false){}
 	virtual int compute(int a) { return 0; }	// basic function which is masked by each of the derived classes (optional 2nd argument)
-	void set_bypass(bool state) { bypass = state; }
+	void set_bypass(bool state) 
+	{
+		if (state != bypass) {
+			bypass = state;
+			changed = true;
+		}
+	}
+	void clear_changed() { changed = false; }
 	bool bypassed() { return bypass; }
+	bool has_changed() { return changed; }
 protected:
 	int value;
 	bool bypass;
+	bool changed;
 };
 
 // Handles additions (Single input class)
@@ -81,8 +94,9 @@ public:
 // be bypassed.
 class Pipeline{
 public:
-	Pipeline() :iterator(0),tot_elements(0) {
+	Pipeline() :iterator(0),tot_elements(0),force_calculation(true) {
 		init_array();
+		init_last_results();
 	}
 
 	// First init the array with NULL pointers
@@ -95,6 +109,24 @@ public:
 		return 0;
 	}
 
+	// Initialize the last_result array with zeros by default
+	void init_last_results(int16_t init_value = 0) {
+		for (int i = 0; i < max_pipeline_size + 1; i++)
+		{
+			last_values[i] = init_value;
+		}
+	}
+
+	bool pipeline_has_changed() {
+		bool has_changed = false;
+		for (int i = 0; i < tot_elements; i++) {
+			if (my_elements[i] != NULL && my_elements[i]->has_changed()) {
+				has_changed = true;
+				my_elements[i]->clear_changed();
+			}
+		}return has_changed;
+	}
+
 	// Function used when removing an element in the Pipeline
 	// when removing an element at the i-th position
 	// shifts all elements whose position is above i to the previous one
@@ -104,7 +136,6 @@ public:
 		{
 			my_elements[position] = my_elements[position + 1];
 			left_shift(position + 1);
-			return;
 		}
 	}
 
@@ -125,6 +156,7 @@ public:
 		my_elements[iterator] = element;
 		tot_elements++;
 		if (iterator + 1 < max_pipeline_size) iterator++; 
+		force_calculation = true;
 	}
 
 	// Calculates the whole transformation 
@@ -136,14 +168,23 @@ public:
 	int transform(int input)
 	{
 		int intermediate = 0;
+		if (pipeline_has_changed()) force_calculation = true;
 		for (int i = 0; i < max_pipeline_size; i++)
 		{
 			if (my_elements[i] != NULL)
 			{
-				intermediate = my_elements[i]->compute(input);	// stores result in an intermediate value
-				input = intermediate; // then next input is the intermediate we've juste calculated
-			}						
+				if (last_values[i] == input && !force_calculation ) return last_values[tot_elements]; // Compares to the old input value
+				else last_values[i] = input;	// stores the new input		
+				if (my_elements[i]->bypassed()) intermediate = input;
+				else {
+					intermediate = my_elements[i]->compute(input);	// stores result in an intermediate value
+					input = intermediate; // then next input is the intermediate we've juste calculated
+				}
+				last_values[i + 1] = intermediate;
+			}
+			else last_values[i + 1] = 0;
 		}
+		force_calculation = false;
 		return intermediate;
 	}
 
@@ -173,8 +214,10 @@ public:
 
 private:
 	PipelineElement* my_elements[max_pipeline_size];
+	int last_values[max_pipeline_size + 1];
 	int iterator;
 	int tot_elements;
+	bool force_calculation;
 };
 
 
@@ -194,6 +237,15 @@ int main()
 	cout << "addition.compute(12) = " << addition.compute(12) << endl;
 	cout << "multi.compute(12) = " << multi.compute(12) << endl;
 
+	multi.set_bypass(true);
+	pipe.print_elements();
+	cout << "pipe.transform(20) = " << pipe.transform(20) << endl;
+	cout << "pipe.transform(20) = " << pipe.transform(20) << endl;
+	multi.set_bypass(false);
+	cout << "pipe.transform(20) = " << pipe.transform(20) << endl;
+	cout << "pipe.transform(40) = " << pipe.transform(40) << endl;
+
+	/*
 	// instanciating 2 new objects
 	Addition barbe(140);
 	Multiplication boubi(3);
@@ -215,6 +267,7 @@ int main()
 	pipe.add_element(&mod);
 	pipe.print_elements();
 	cout << "pipe.transform(12) = " << pipe.transform(12) << endl;
+	*/
     return 0;
 }
 
