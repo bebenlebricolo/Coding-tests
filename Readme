@@ -1,15 +1,5 @@
-Here you will find my current and past work about testing "new" ideas (when I say new, I'm talking about my new ideas, however they surely exist somewhere else, on other projects, etc.)
-It's more for me a way to capitalize on ideas, share them with people and use them as milestones for my current projects.
-
-I try to publish those files without any bugs and with comments / documentation.
-However, they may not be perfect, have remaining bugs, unclear comments and documentation. 
-I will be more than happy if the reader contacts me and tells me where I should rework things.
-
-Finally, I'm doing this with the "Open Source" spirit (at least, I try my best for it!), this is why you can find those tests around here.
-
-Note : some of my tests may have been written to target embedded device, such as 8-bit microcontrollers. 
-Some of their dedicated compilers (like avr-gcc) cannot handle the entirety of C++ language (templates, dynamic allocation, console prints, vectors, etc, are not allowed).
-This implies that I must reduce the code size as much as possible and use some "tricks" to get around those limitations. 
-This explains why, when <vector.h> is needed, I have to work my way around it and find another way (closer to C implementation) to get passed this issue.
+Here are "random" stuff, including tests, garbage, ...
+I've put them here mainly to store them somewhere, however some of them may contain simple concepts which could be reused by anyone.
+Feel free to pick them up, maybe some parts of them would be usefull !
 
 Happy coding!
