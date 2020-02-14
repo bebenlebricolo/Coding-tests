@@ -5,7 +5,7 @@
 
 using namespace std;
 
-mutex mtx;
+static volatile mutex mtx;
 
 #define S_SIZE 20
 #define S_MSG_SIZE 256
@@ -15,38 +15,44 @@ enum ECode {
     NULL_PTR ,
     STACK_FULL ,
     STACK_EMPTY,
-    UNKNOWN };
+    UNKNOWN
+};
 
-struct stack 
+static struct stack
 {
-    public: 
-
+public:
     ECode push(char* msg , size_t sz);
     ECode pop(char*);
     char* get_element(uint8_t i);
     uint8_t get_element_count() {return element_count;}
     void flush();
     void quick_flush();
-    
-    protected:
-    
+
+protected:
     uint8_t element_count;
     char s [S_SIZE][S_MSG_SIZE];
-};
+} error_stack ;
 
-stack error_stack;
 void thread_function(int id,int loops)
 {
+    static thread_local uint16_t retries = 0;
     for(int i = 0; i< loops;i++)
     {
-        
+        // We try to lock the mutex.
+        // If operation does not succeed (returns false), it means another thread has already locked cout.
         if( mtx.try_lock() == false)
         {
+            retries++;
             char msg[S_MSG_SIZE];
-            snprintf(msg, S_MSG_SIZE , "Thread %d cannot access to cout ! push message in error stack [%d]",id,error_stack.get_element_count());
+            snprintf(msg, S_MSG_SIZE , "Thread %d cannot access to cout ! push message in error stack [%d]. Retries count = %d",
+                     id,
+                     (error_stack.get_element_count() + 1),
+                     retries
+                     );
             error_stack.push(msg,S_MSG_SIZE);
         }
-        else{
+        else
+        {
             char msg[S_MSG_SIZE];
             cout << "I'm thread " << to_string(id) << endl ;
             if(error_stack.pop(msg)==NO_ERROR)
@@ -54,7 +60,6 @@ void thread_function(int id,int loops)
                 cout << msg << endl;
             }
             mtx.unlock();
-            if(id == 1)
             {
                 this_thread::sleep_for(chrono::milliseconds(50));
             }
