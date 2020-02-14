@@ -1,0 +1,8 @@
+.vscode/
+*.exe
+*.so
+*.a
+*.lib
+build/
+Release/
+Debug/
