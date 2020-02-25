@@ -15,6 +15,6 @@ class IOStuff
 static const char* convertion_table[3] =
 {
     [0] = {"UNKNOWN"},
-    [1] = {"UNKNOWN"},
-    [2] = {"UNKNOWN"}
+    [1] = {"FILE_NOT_FOUND"},
+    [2] = {"WRONG_PERMISSIONS"}
 };

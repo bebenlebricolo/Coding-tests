@@ -3,26 +3,31 @@
 #include "config.h"
 #include "stm32f051xx_io_mapping.h"
 #include "debug_utils.hpp"
-
-
+#include "setup.h"
+#include "userIOs.hpp"
+#include "mock_register.h"
 
 int main(int argc, char** argv)
 {
     (void) argc;
     (void) argv;
 
-    ::peripheral::io coil_drive_io(peripheral::coil_drive_id);
-    ::peripheral::io fan_drive_1_io(peripheral::fan_drive_1_id);
-    ::peripheral::io fan_drive_2_io(peripheral::fan_drive_2_id);
+    setup_ios();
 
-    coil_drive_io.setup(peripheral::coil_drive_config);
-    fan_drive_1_io.setup(peripheral::fan_drive_1_config);
-    fan_drive_2_io.setup(peripheral::fan_drive_2_config);
+    std::cout << "Printing coil drive io structure and related MOCK object" << std::endl;
+    debug::print_io_struct(userIo::coil_drive);
+    std::cout << "Mock object :\n";
+    debug::print_config_struct(MOCK::get_mock_io_config(peripheral::stm32f051xx::GIO_PORTA));
 
-    debug::print_io_struct(coil_drive_io);
-    debug::print_io_struct(fan_drive_1_io);
-    debug::print_io_struct(fan_drive_2_io);
+    std::cout << "\nPrinting fan drive 1 io structure and related MOCK object" << std::endl;
+    debug::print_io_struct(userIo::fan_drive_1);
+    std::cout << "Mock object :\n";
+    debug::print_config_struct(MOCK::get_mock_io_config(peripheral::stm32f051xx::GIO_PORTA));
 
+    std::cout << "\nPrinting fan drive 2 io structure and related MOCK object" << std::endl;
+    debug::print_io_struct(userIo::fan_drive_2);
+    std::cout << "Mock object :\n";
+    debug::print_config_struct(MOCK::get_mock_io_config(peripheral::stm32f051xx::GIO_PORTA));
 
     return 0;
 }

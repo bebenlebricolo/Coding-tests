@@ -8,6 +8,7 @@ namespace MOCK
 {
 uint32_t get_portindex(const uint32_t * const port);
 extern ::peripheral::io::config ioregisters[4];
+const peripheral::io::config& get_mock_io_config(const uint32_t * const port);
 }
 
 #endif

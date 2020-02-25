@@ -34,6 +34,7 @@ public:
             tristate
         };
 
+        // Aka "Direction"
         enum class Mode
         {
             output,
@@ -53,16 +54,23 @@ public:
     {
         identity(const uint32_t * const _port, uint32_t _pin);
         identity(const identity& other) = default;
-        const uint32_t * const port;
-        const uint32_t   pin;
+        identity& operator=(const identity& other);
+        uint32_t * port;
+        uint32_t   pin;
     };
 
-    io() = delete;
+    io()=delete;
     io(const io& other) = default;
     io(const identity& _id);
 
+    void set_identity(const identity& _id);
+    identity get_identity();
+
     config::State read();
     void write(config::State s);
+
+    config::State get_state();
+    void set_state(config::State s);
 
     void set_mode(config::Mode m);
     config::Mode get_mode();

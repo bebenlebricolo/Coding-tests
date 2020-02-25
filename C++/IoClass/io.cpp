@@ -16,22 +16,33 @@ io::config::config( io::config::State _st,
                         mode(_m)
 {}
 
-io::identity::identity(const uint32_t * const _port, uint32_t _pin) : port(_port), pin(_pin)
-{}
+/* Identity */
 
+io::identity::identity(const uint32_t * const _port, uint32_t _pin) : port((uint32_t *) _port), pin(_pin)
+{}
+io::identity& io::identity::operator=(const identity& other)
+{
+    port = other.port;
+    pin = other.pin;
+}
+
+/* Config */
 io::config::config() :
     state(io::config::State::low),
     speed(io::config::Speed::high),
     topology(io::config::Topology::tristate),
     mode(io::config::Mode::input) {}
 
-io::io(const io::identity& _id) : id(_id){}
+
 
 io::config::Mode io::get_mode()
 {
     uint32_t index = (MOCK::get_portindex(id.port));
     return  ::MOCK::ioregisters[index].mode;
 }
+
+/* Io */
+io::io(const io::identity& _id) : id(_id){}
 
 void io::set_mode(io::config::Mode m)
 {
@@ -81,6 +92,16 @@ void io::setup(const io::config& _config)
     set_mode(_config.mode);
     set_speed(_config.speed);
     write(_config.state);
+}
+
+void io::set_identity(const io::identity& _id)
+{
+    id = _id;
+}
+
+io::identity io::get_identity()
+{
+    return id;
 }
 
 }

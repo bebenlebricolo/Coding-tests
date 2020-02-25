@@ -6,11 +6,6 @@ namespace peripheral
 {
 // Where to find those GPIOs
 const io::identity coil_drive_id(stm32f051xx::GIO_PORTA,0U);
-const io::config coil_drive_config(io::config::State::low,
-                                   io::config::Speed::high,
-                                   io::config::Topology::push_pull,
-                                   io::config::Mode::output );
-
 
 const io::identity fan_drive_1_id(stm32f051xx::GIO_PORTB,2U);
 const io::config fan_drive_1_config(io::config::State::low,

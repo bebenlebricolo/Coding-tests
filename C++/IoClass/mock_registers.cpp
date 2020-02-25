@@ -27,4 +27,11 @@ uint32_t get_portindex(const uint32_t * const port)
     return 5;
 }
 
+const peripheral::io::config& get_mock_io_config(const uint32_t * const port)
+{
+    uint32_t index = get_portindex(port);
+    return ioregisters[index];
+}
+
+
 }
