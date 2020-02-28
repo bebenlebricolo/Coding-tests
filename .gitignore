@@ -1,8 +1,17 @@
+# Config folders and metadatas
 .vscode/
+
+# Executables and libraries
 *.exe
 *.so
 *.a
 *.lib
-build/
-Release/
-Debug/
+
+# Build folders
+[Bb]uild/
+[Rr]elease/
+[Dd]ebug/
+
+# Archives
+*.zip
+*.7z
