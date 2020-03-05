@@ -6,9 +6,9 @@
 template <typename T , std::size_t Capacity>
 struct StaticArray
 {
-    StaticArray() : array(){}
+    constexpr StaticArray():array(){};
     template <std::size_t InputCount>
-    constexpr StaticArray(const T (&data)[InputCount]) : array()
+    constexpr StaticArray(const T (&data)[InputCount]) : array(), elt_count(0)
     {
         static_assert( InputCount <= Capacity);
         for (auto elt : data)
@@ -17,13 +17,9 @@ struct StaticArray
         }
     }
 
-    StaticArray(StaticArray& other)
-    {
-        for( auto elt : other.array)
-        {
-            push(elt);
-        }
-    }
+    constexpr StaticArray(const StaticArray& other) : StaticArray(other.array)
+    {}
+
     constexpr void push(T& val)
     {
         array[elt_count] = val;

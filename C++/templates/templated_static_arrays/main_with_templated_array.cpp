@@ -16,6 +16,7 @@ struct SuperStruct
         array1.print();
         array2.print();
     }
+
 };
 
 int main(int argc, char** argv)
@@ -25,7 +26,10 @@ int main(int argc, char** argv)
 
     constexpr uint16_t array_a[] = {4,25};
     constexpr uint16_t array_b[] = {3,4};
+
     constexpr StaticArray<uint16_t, 3> toto(array_a);
+    // Copy constructor
+    constexpr StaticArray<uint16_t, 3> tutu(toto);
     constexpr SuperStruct tata(array_a,array_b);
 
     toto.print();
