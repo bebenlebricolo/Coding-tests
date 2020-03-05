@@ -5,7 +5,7 @@ template <typename T , uint32_t SizeMax>
 struct StaticArray
 {
     StaticArray(){}
-    StaticArray(std::initializer_list<T>& l)
+    StaticArray(std::initializer_list<T> l)
     {
         for (auto elt : l)
         {
