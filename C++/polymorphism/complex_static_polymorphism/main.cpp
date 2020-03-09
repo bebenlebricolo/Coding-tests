@@ -7,7 +7,7 @@ class Base
 public:
     void do_something()
     {
-        std::cout << "My name is : " << name << std::endl;
+        std::cout << "Called from Base class " << std::endl;
     }
 
 private:
@@ -20,6 +20,10 @@ class Derived : public Base<Derived>
 {
 public:
     Derived():Base(){name="Derived";}
+    void do_something()
+    {
+        print_something();
+    }
     void print_something(){std::cout << "Hello from Derived" << std::endl;}
 };
 
@@ -40,10 +44,11 @@ int main (int argc, char ** argv)
         d.print_something();
         d.do_something();
 
-        // Static polymorphism
-        Base<decltype(d)> * b = &d;
+        // Does not work ! This calls the Base class of Derived, which is not what we actually want
+        Base<Derived> * b = &d;
         b->do_something();
 
+        // same goes here
         do_some_stuff_with_base(&d);
     }
 
