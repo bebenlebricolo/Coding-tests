@@ -10,19 +10,16 @@ struct crtp
 template <typename T>
 struct Base : public crtp<T>
 {
+    T& Self() {return static_cast<T&>(*this);}
     void say_hello()
     {
-        std::cout << "Hello from Base" << std::endl;
-    }
-    void say_hello_from_child()
-    {
-        this->underlying().say_hello_from_child();
+       Self().say_hello();
     }
 };
 
 struct Derived1 : public Base<Derived1>
 {
-    void say_hello_from_child()
+    void say_hello()
     {
         std::cout << "Hello from Derived 1 " << std::endl;
     }
@@ -30,7 +27,7 @@ struct Derived1 : public Base<Derived1>
 
 struct Derived2 : public Base<Derived2>
 {
-    void say_hello_from_child()
+    void say_hello()
     {
         std::cout << "Hello from Derived 2 " << std::endl;
     }
@@ -40,10 +37,10 @@ struct Derived2 : public Base<Derived2>
 // with a class implementing say_hello_from_child
 // And we already know, when we use it, that we are using the Derived's implementation
 // instead of Base's
-template<class Base>
-void dosmthg(Base& b)
+template<class T>
+void dosmthg(Base<T>& b)
 {
-    b.say_hello_from_child();
+    b.say_hello();
 }
 
 int main()
@@ -53,7 +50,7 @@ int main()
     Derived2 d2;
     dosmthg<Derived1>(d1);
     dosmthg<Derived2>(d2);
-    dosmthg<decltype(d0)>(d0);
+    dosmthg<Derived1>(d0);
 
     return 0;
 }
