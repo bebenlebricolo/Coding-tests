@@ -1,0 +1,3 @@
+[submodule "C++/PugiXml/pugixml"]
+	path = C++/PugiXml/pugixml
+	url = https://github.com/zeux/pugixml.git
