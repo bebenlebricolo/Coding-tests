@@ -1,5 +1,6 @@
 # Config folders and metadatas
 .vscode/
+.vs/
 
 # Executables and libraries
 *.exe
