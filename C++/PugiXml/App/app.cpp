@@ -13,6 +13,27 @@ void append_inlined_node_child_pcdata(pugi::xml_node& parent, const std::string&
     }
 }
 
+void build_simulator_configuration(pugi::xml_node& parent, const std::string& device_signature = "0x1E930B", const std::string& stimuli_filepath = "")
+{
+    append_inlined_node_child_pcdata(parent, "avrtool", "com.atmel.avrdbg.tool.simulator");
+    append_inlined_node_child_pcdata(parent, "avrtoolserialnumber");
+    append_inlined_node_child_pcdata(parent, "avrdeviceexpectedsignature", device_signature.c_str());
+    pugi::xml_node simulator_configuration_node = parent.append_child("com_atmel_avrdbg_tool_simulator");
+    pugi::xml_node tool_options_node = simulator_configuration_node.append_child("ToolOptions");
+    append_inlined_node_child_pcdata(tool_options_node, "InterfaceProperties");
+    append_inlined_node_child_pcdata(tool_options_node, "InterfaceName");
+
+    append_inlined_node_child_pcdata(simulator_configuration_node, "ToolType", "com.atmel.avrdbg.tool.simulator");
+    append_inlined_node_child_pcdata(simulator_configuration_node, "ToolNumber");
+    append_inlined_node_child_pcdata(simulator_configuration_node, "ToolName", "Simulator");
+
+    if(!stimuli_filepath.empty())
+    {
+        append_inlined_node_child_pcdata(parent, "StimuliFile", stimuli_filepath.c_str());
+    }
+    append_inlined_node_child_pcdata(parent, "avrtoolinterface");
+}
+
 void build_device_prop_group(pugi::xml_node& parent, const std::string& target_name)
 {
     // @see http://www.gerald-fahrnholz.eu/sw/DocGenerated/HowToUse/html/group___grp_pugi_xml.html#pugi_xml_generated_file
@@ -62,6 +83,8 @@ void build_device_prop_group(pugi::xml_node& parent, const std::string& target_n
     content_extension_node.append_attribute("eid").set_value("atmel.asf");
     content_extension_node.append_attribute("uuidref").set_value("Atmel.ASF");
     content_extension_node.append_attribute("version").set_value("3.40.0");
+
+    build_simulator_configuration(property_group);
 }
 
 void build_configuration_xml_group(pugi::xml_node& parent, const std::string& build_type)
