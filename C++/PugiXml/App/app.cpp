@@ -165,6 +165,6 @@ int main(int argc, char** argv)
     pugi::xml_node import_projects_node = project_node.append_child("Import");
     import_projects_node.append_attribute("Project") = R"($(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets)";
 
-    doc.save_file("./output.xml", "  ");
+    doc.save_file("./output.xml", "  ",(pugi::format_indent | pugi::format_write_bom),pugi::xml_encoding::encoding_utf8);
     return 0;
 }
