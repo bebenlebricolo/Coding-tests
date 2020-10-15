@@ -43,7 +43,9 @@ endif()
 
 add_executable(fakeapp
     ${CMAKE_SOURCE_DIR}/App/app.cpp
-)
+    App/TotoTest.c
+    App/TotoTest.h
+ )
 
 target_link_libraries(fakeapp
     pugixmllib

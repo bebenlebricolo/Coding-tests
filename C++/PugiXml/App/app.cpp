@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "pugixml.hpp"
+#include "TotoTest.h"
 
 void append_inlined_node_child_pcdata(pugi::xml_node& parent, const std::string& node_name, const std::string& value = "")
 {
