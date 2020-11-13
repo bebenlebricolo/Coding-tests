@@ -1,3 +1,6 @@
 [submodule "C++/PugiXml/pugixml"]
 	path = C++/PugiXml/pugixml
 	url = https://github.com/zeux/pugixml.git
+[submodule "C++/jsonTest/rapidjson"]
+	path = C++/jsonTest/rapidjson
+	url = git@github.com:Tencent/rapidjson.git
