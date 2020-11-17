@@ -27,6 +27,7 @@ int main()
     outputfiles.add_child(usersignature);
     common.add_child(outputfiles);
     common.add_child(Device);
+    avrgcc.add_child(common);
 
 
 
