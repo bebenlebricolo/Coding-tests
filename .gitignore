@@ -16,3 +16,7 @@
 # Archives
 *.zip
 *.7z
+
+# Python cache
+__pycache__/*
+__pycache__*
