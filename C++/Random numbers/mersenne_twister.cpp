@@ -36,13 +36,11 @@ int main(int argc, char ** argv)
 {
     std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-    std::random_device rd;
-    std::mt19937 g(rd());
-
+    std::mt19937 g(256);
 
     uint32_t iterations = parse_input(argc, argv);
     std::ofstream outfile;
-    outfile.open("Output.txt", std::ofstream::out);
+    outfile.open("Output_mersenne_twister.txt", std::ofstream::out);
 
     if (iterations == 0)
     {
@@ -51,9 +49,9 @@ int main(int argc, char ** argv)
 
     for (uint8_t i = 0 ; i < iterations ; i++)
     {
-        std::vector<int> s = v;
-        std::shuffle(s.begin(), s.end());
-        std::copy(s.begin(), s.end(), std::ostream_iterator<int>(outfile, " "));
+        std::vector<int> shuffled = v;
+        std::shuffle(shuffled.begin(), shuffled.end(), g);
+        std::copy(shuffled.begin(), shuffled.end(), std::ostream_iterator<int>(outfile, " "));
         outfile << std::endl;
     }
 
