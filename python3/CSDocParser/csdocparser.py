@@ -65,8 +65,13 @@ def resolve_padding(line:str):
     return padding
 
 def is_line_comment(line : str):
-
     if line.find("///") == -1 :
+        return False
+    else :
+        return True
+
+def is_using_statement(line : str):
+    if line.find("using") == -1 :
         return False
     else :
         return True
@@ -91,6 +96,8 @@ class CsDocParser :
         self.file = file
         self.parsing_mode = self.Mode.Normal
         self.data = list()
+        self.needs_using_system = True # Tells whether the locally inspected file needs the using System; import
+        self.using_block_start = -1
 
     def parse(self):
         if os.path.isfile(self.file) and self.tryopen(self.file) :
@@ -108,8 +115,9 @@ class CsDocParser :
     def parse_line(self, line : str, line_count : int):
         is_comment = is_line_comment(line)
         padding = resolve_padding(line)
-        if self.parsing_mode == self.Mode.Normal :
 
+        # Parse comments if any (starting/closing)
+        if self.parsing_mode == self.Mode.Normal :
             # Found block comment starting !
             if is_comment and line.find("<summary>") != -1 :
                 self.parsing_mode = self.Mode.Block
@@ -121,6 +129,14 @@ class CsDocParser :
             if not is_comment :
                 self.parsing_mode = self.Mode.Normal
                 self.data.append(ModifiedContent(line_count, generate_padding(padding) + "[Obsolete(\"Obsolete in 2020.4, will be removed in 2021.1\")]\n"))
+
+        if is_using_statement(line) :
+            # Record where using block starts
+            if self.using_block_start == -1 :
+                self.using_block_start = line_count
+
+            if line.find("using System;") != -1 :
+                self.needs_using_system = False
 
     def apply_modifications(self, duplicate : bool) :
         outfilename = os.path.basename(self.file)
@@ -135,6 +151,15 @@ class CsDocParser :
             filecontent = target_file.readlines()
 
         added_lines = 0
+
+        # Handles using System; import
+        if self.needs_using_system :
+            if self.using_block_start == -1 :
+                self.using_block_start = 0
+
+            filecontent.insert(self.using_block_start, "using System;\n")
+            added_lines += 1
+
         for new_line in self.data :
             filecontent.insert(new_line.line_count + added_lines, new_line.content)
             added_lines += 1
