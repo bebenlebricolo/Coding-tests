@@ -13,7 +13,8 @@ namespace testfile
     /// Letraset sheets containing Lorem Ipsum passages, and more recently with
     /// desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
     /// </summary>
-    [Obsolete("Obsolete in 2020.4, will be removed in 2021.1")]
+    [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public sealed class LoremIpsums
     {
         private int a;
@@ -34,8 +35,9 @@ namespace testfile
         /// </summary>
         /// <param name="_a"> dummy param 1.</param>
         /// <param name="_b"> dummy param 2.</param>
-        [Obsolete("Obsolete in 2020.4, will be removed in 2021.1")]
+        [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
         [UnfortunateTag(yolo))]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         internal LoremIpsum(int _a, int _b)
         {
             a = _a;
@@ -52,7 +54,8 @@ namespace testfile
         /// </summary>
         /// <exception cref="ArgumentException">
         /// </exception>
-        [Obsolete("Obsolete in 2020.4, will be removed in 2021.1")]
+        [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         public Point3 Corner(int which)
         {
             if (which > 3 || which < 0)
@@ -69,7 +72,7 @@ namespace testfile
         /// into electronic typesetting, remaining essentially unchanged.
         /// It was popularised in the 1960s with the release of
         /// </summary>
-        [Obsolete("Obsolete in 2020.4, will be removed in 2021.1")]
+        [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
         public int SizeI { get; private set; }
     };
 }

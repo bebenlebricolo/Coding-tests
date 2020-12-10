@@ -83,14 +83,24 @@ def generate_padding(padding : int):
     return out
 
 class ModifiedContent :
-    def __init__(self, line_count : int, content : str) :
+    class Kind(Enum) :
+        ObsoleteTag = "/// [Obsolete]\n"
+        ObsoleteAttribute = "[Obsolete(\"Obsolete in 2021.1, will be removed in 2022.1\")]\n"
+        EditorAttribute = "[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]\n"
+
+    def __init__(self, line_count : int, content : Kind, padding : int) :
         self.line_count = line_count
         self.content = content
+        self.padding = padding
+
+    def generate(self):
+        return generate_padding(self.padding) + self.content.value
 
 class CsDocParser :
     class Mode(Enum):
         Normal = 0
         Block = 1
+        EditorTagSearch = 2
 
     def __init__(self, file):
         self.file = file
@@ -121,14 +131,28 @@ class CsDocParser :
             # Found block comment starting !
             if is_comment and line.find("<summary>") != -1 :
                 self.parsing_mode = self.Mode.Block
-                self.data.append(ModifiedContent(line_count + 1, generate_padding(padding) + "/// [Obsolete]\n"))
+                self.data.append(ModifiedContent(line_count + 1, ModifiedContent.Kind.ObsoleteTag, padding))
 
         # Block parsing triggered
-        else :
-            # Stop block parsing whenever lines are not commented anymore
-            if not is_comment :
-                self.parsing_mode = self.Mode.Normal
-                self.data.append(ModifiedContent(line_count, generate_padding(padding) + "[Obsolete(\"Obsolete in 2020.4, will be removed in 2021.1\")]\n"))
+        # Stop block parsing whenever lines are not commented anymore
+        elif not is_comment :
+            if self.parsing_mode == self.Mode.Block :
+                self.parsing_mode = self.Mode.EditorTagSearch
+                self.data.append(ModifiedContent(line_count, ModifiedContent.Kind.ObsoleteAttribute, padding))
+
+            # Check for EditorBrowsable attribute
+            elif self.parsing_mode == self.Mode.EditorTagSearch :
+                search_lines_count = (line_count - self.data[-1].line_count)
+                # Do not trigger attribute addition if one is found within 5 lines after switching off
+                # comment parsing
+                if search_lines_count < 3 :
+                    if line.find("System.ComponentModel.EditorBrowsableState.Never") != -1 :
+                        self.parsing_mode = self.Mode.Normal
+                else :
+                    self.parsing_mode = self.Mode.Normal
+                    last_line_count = self.data[-1].line_count
+                    last_padding = self.data[-1].padding
+                    self.data.append(ModifiedContent(last_line_count, ModifiedContent.Kind.EditorAttribute, last_padding))
 
         if is_using_statement(line) :
             # Record where using block starts
@@ -161,7 +185,7 @@ class CsDocParser :
             added_lines += 1
 
         for new_line in self.data :
-            filecontent.insert(new_line.line_count + added_lines, new_line.content)
+            filecontent.insert(new_line.line_count + added_lines, new_line.generate())
             added_lines += 1
 
         with open(outfile, 'w') as out :

@@ -31,6 +31,7 @@ namespace testfile
         /// <param name="_a"> dummy param 1.</param>
         /// <param name="_b"> dummy param 2.</param>
         [UnfortunateTag(yolo))]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         internal LoremIpsum(int _a, int _b)
         {
             a = _a;
