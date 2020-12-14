@@ -64,41 +64,47 @@ class CSCommentParser :
         if self.mode == self.Mode.Normal :
             if len(markers) != 0 :
                 # Iterate over the markers
-                for mark_id, mark in enumerate(markers) :
-                    character = mark.type
-                    c_index = mark.index
+                character = markers[0].type
+                c_index = markers[0].index
 
-                    # Single line comments are popped out directly : everything which is at the right of those comments is stripped away
-                    if character == self.Type.Line :
+                # Single line comments are popped out directly : everything which is at the right of those comments is stripped away
+                if character == self.Type.Line :
+                    return line[0 : c_index]
+
+                # In case of comment block opening /*, check for the counterpart */.
+                # If closing comment marker is not found, then we switch to the block parsing mode to be able to interprete incoming
+                # lines.
+                # Otherwise, if closing block marker is found, remove the enclosed part from the line and if that marker was not the last marker
+                # on this line, recurse with the remaining part of the line
+                elif character == self.Type.BlockOpen :
+                    next_end = self.find_next_block_end(markers, 1)
+                    if next_end is None :
+                        self.mode = self.Mode.Block
                         return line[0 : c_index]
-
-                    # In case of comment block opening /*, check for the counterpart */.
-                    # If closing comment marker is not found, then we switch to the block parsing mode to be able to interprete incoming
-                    # lines.
-                    # Otherwise, if closing block marker is found, remove the enclosed part from the line and if that marker was not the last marker
-                    # on this line, recurse with the remaining part of the line
-                    elif character == self.Type.BlockOpen :
-                        next_end = self.find_next_block_end(markers, mark_id)
-                        if next_end is None :
-                            self.mode = self.Mode.Block
-                            return line[0 : c_index]
+                    else :
+                        if next_end["index"] == (len(markers) - 1) :
+                            before = line[0 : c_index]
+                            after = line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)]
+                            return before + after
                         else :
-                            if next_end["index"] == (len(markers) - 1) :
-                                before = line[0 : c_index]
-                                after = line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)]
-                                return before + after
-                            else :
-                                # Recurse on itself to pop out the last bits of the comments in line
-                                before = line[0 : c_index]
-                                return before + self.remove_comments(line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)])
+                            # Recurse on itself to pop out the last bits of the comments in line
+                            before = line[0 : c_index]
+                            return before + self.remove_comments(line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)])
 
         # Research the next BlockEnd character
         elif self.mode == self.Mode.Block :
-            next_end = self.find_next_block_end(markers, 1)
+            next_end = self.find_next_block_end(markers, 0)
             if next_end is None :
-                self.mode = self.Mode.Block
                 return ""
             else:
+                self.mode = self.Mode.Normal
+                after = line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)]
+                if next_end["index"] == (len(markers) - 1) :
+                    return after
+                else :
+                    return self.remove_comments(after)
+
+        return line
 
 
 
@@ -230,11 +236,13 @@ class tests :
             "namespace toto { /* something right here ",
             "public class tata; // Commented out",
             "public class titi; // Commented out",
-            "/*public class tutu; // This is the class I want",
+            "*/public class tutu; // This is the class I want",
         ]
 
         expected_result = [
             "namespace toto { ",
+            "",
+            "",
             "public class tutu; ",
         ]
 
@@ -246,21 +254,21 @@ class tests :
             assert(expected_result[i] == result[i])
 
     def run_all_tests(self):
-        #self.test_parse_markers_simple_inline()
-        #self.test_parse_markers_simple_inline2()
-        #self.test_parse_markers_block1()
-        #self.test_parse_markers_block2()
-        #self.test_parse_markers_block_single1()
-        #self.test_parse_markers_block_single2()
+        self.test_parse_markers_simple_inline()
+        self.test_parse_markers_simple_inline2()
+        self.test_parse_markers_block1()
+        self.test_parse_markers_block2()
+        self.test_parse_markers_block_single1()
+        self.test_parse_markers_block_single2()
 
-        #self.test_remove_comments_simple_inline()
-        #self.test_remove_comments_simple_inline2()
-        #self.test_remove_comments_block1()
-        #self.test_remove_comments_block2()
-        #self.test_remove_comments_mixed1()
-        #self.test_remove_comments_mixed2()
-        #self.test_remove_comments_mixed3()
-        #self.test_remove_comments_mixed4()
+        self.test_remove_comments_simple_inline()
+        self.test_remove_comments_simple_inline2()
+        self.test_remove_comments_block1()
+        self.test_remove_comments_block2()
+        self.test_remove_comments_mixed1()
+        self.test_remove_comments_mixed2()
+        self.test_remove_comments_mixed3()
+        self.test_remove_comments_mixed4()
 
         self.test_remove_comments_multiline()
 
