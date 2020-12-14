@@ -1,4 +1,4 @@
-// Commen number 1
+// Comment number 1
 using System.collections;
 
 namespace testfile
@@ -47,7 +47,7 @@ namespace testfile
         /// </summary>
         /// <exception cref="ArgumentException">
         /// </exception>
-        public Point3 Corner(int which)
+        public Point3 Corner(int which/*here in the middle*/)
         {
             if (which > 3 || which < 0)
             {

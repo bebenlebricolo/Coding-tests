@@ -1,3 +1,4 @@
+import sys
 from enum import Enum
 
 def find_in(string : str, pattern : str) :
@@ -15,6 +16,7 @@ def find_in(string : str, pattern : str) :
 
 class CSCommentParser :
     class Type(Enum) :
+        NoComment = ""
         Line = "//"
         BlockOpen = "/*"
         BlockEnd = "*/"
@@ -59,8 +61,9 @@ class CSCommentParser :
                 return {"index" : m_index, "marker" : markers[m_index]}
         return None
 
-    def remove_comments(self, line : str):
+    def parse_line(self, line : str, remove_comment=True):
         markers = self.parse_comments_markers(line)
+        out = line
         if self.mode == self.Mode.Normal :
             if len(markers) != 0 :
                 # Iterate over the markers
@@ -69,7 +72,8 @@ class CSCommentParser :
 
                 # Single line comments are popped out directly : everything which is at the right of those comments is stripped away
                 if character == self.Type.Line :
-                    return line[0 : c_index]
+                    if remove_comment :
+                       out = line[0 : c_index]
 
                 # In case of comment block opening /*, check for the counterpart */.
                 # If closing comment marker is not found, then we switch to the block parsing mode to be able to interprete incoming
@@ -80,36 +84,37 @@ class CSCommentParser :
                     next_end = self.find_next_block_end(markers, 1)
                     if next_end is None :
                         self.mode = self.Mode.Block
-                        return line[0 : c_index]
+                        if remove_comment :
+                            out = line[0 : c_index]
                     else :
                         if next_end["index"] == (len(markers) - 1) :
                             before = line[0 : c_index]
                             after = line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)]
-                            return before + after
+                            if remove_comment :
+                                out = before + after
                         else :
                             # Recurse on itself to pop out the last bits of the comments in line
                             before = line[0 : c_index]
-                            return before + self.remove_comments(line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)])
+                            if remove_comment :
+                                out = before + self.parse_line(line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)], remove_comment)
 
         # Research the next BlockEnd character
         elif self.mode == self.Mode.Block :
             next_end = self.find_next_block_end(markers, 0)
-            if next_end is None :
-                return ""
+            if next_end is None:
+                if remove_comment :
+                    out = ""
             else:
                 self.mode = self.Mode.Normal
                 after = line[next_end["marker"].index + len(self.Type.BlockEnd.value) : len(line)]
                 if next_end["index"] == (len(markers) - 1) :
-                    return after
+                    if remove_comment :
+                        out = after
                 else :
-                    return self.remove_comments(after)
+                    if remove_comment :
+                        out = self.parse_line(after, remove_comment)
 
-        return line
-
-
-
-
-
+        return out
 
 
 class tests :
@@ -192,42 +197,42 @@ class tests :
 
     def test_remove_comments_simple_inline(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments(self.testcomments[0])
+        stripped = parser.parse_line(self.testcomments[0])
         assert(stripped == "")
 
     def test_remove_comments_simple_inline2(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments(self.testcomments[1])
+        stripped = parser.parse_line(self.testcomments[1])
         assert(stripped == "namespace toto { ")
 
     def test_remove_comments_block1(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments(self.testcomments[2])
+        stripped = parser.parse_line(self.testcomments[2])
         assert(stripped == "")
 
     def test_remove_comments_block2(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments(self.testcomments[3])
+        stripped = parser.parse_line(self.testcomments[3])
         assert(stripped == "")
 
     def test_remove_comments_mixed1(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments(self.testcomments[4])
+        stripped = parser.parse_line(self.testcomments[4])
         assert(stripped == "")
 
     def test_remove_comments_mixed2(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments(self.testcomments[5])
+        stripped = parser.parse_line(self.testcomments[5])
         assert(stripped == "")
 
     def test_remove_comments_mixed3(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments("namespace toto { /* something right here // comment */ public class titi")
+        stripped = parser.parse_line("namespace toto { /* something right here // comment */ public class titi")
         assert(stripped == "namespace toto {  public class titi")
 
     def test_remove_comments_mixed4(self):
         parser = CSCommentParser()
-        stripped = parser.remove_comments("namespace toto { /* something */ public class titi : /* another comment */ public Isomething // final comment")
+        stripped = parser.parse_line("namespace toto { /* something */ public class titi : /* another comment */ public Isomething // final comment")
         assert(stripped == "namespace toto {  public class titi :  public Isomething ")
 
     def test_remove_comments_multiline(self):
@@ -248,7 +253,7 @@ class tests :
 
         result = list()
         for line in multiline_comment :
-            result.append(parser.remove_comments(line))
+            result.append(parser.parse_line(line))
 
         for i in range(0, len(multiline_comment)):
             assert(expected_result[i] == result[i])
@@ -272,9 +277,28 @@ class tests :
 
         self.test_remove_comments_multiline()
 
-def main():
+def run_tests():
     tests_obj = tests()
     tests_obj.run_all_tests()
 
+def main(args):
+    parser = CSCommentParser()
+    stripped_lines = list()
+    with open(args[1], 'r') as file :
+        while True:
+            line = file.readline()
+            if not line :
+                break
+            stripped = parser.parse_line(line).rstrip()
+
+            # if not empty, push append it
+            if stripped :
+                stripped_lines.append(parser.parse_line(line))
+
+
+    with open("Tests/output.cs", 'w') as file :
+        file.writelines(stripped_lines)
+
 if __name__ == "__main__" :
-    main()
+    #run_tests()
+    main(sys.argv)

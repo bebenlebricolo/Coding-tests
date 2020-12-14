@@ -1,4 +1,5 @@
-// Commen number 1
+// Comment number 1
+using System.ComponentModel;
 using System;
 using System.collections;
 
@@ -7,6 +8,7 @@ namespace testfile
     /// <summary>
     /// [Obsolete]
     /// of type and scrambled it to make a type specimen book.
+    /// This API is deprecated, please move to PSG API instead <see cref="Slb.Ocean.Petrel.StructuralGeology"/>
     /// It has survived not only five centuries, but also the leap
     /// into electronic typesetting, remaining essentially unchanged.
     /// It was popularised in the 1960s with the release of
@@ -14,7 +16,7 @@ namespace testfile
     /// desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
     /// </summary>
     [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed class LoremIpsums
     {
         private int a;
@@ -30,6 +32,7 @@ namespace testfile
         /// <summary>
         /// [Obsolete]
         /// It was popularised in the 1960s with the release of
+        /// This API is deprecated, please move to PSG API instead <see cref="Slb.Ocean.Petrel.StructuralGeology"/>
         /// Letraset sheets containing Lorem Ipsum passages, and more recently with
         /// desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
         /// </summary>
@@ -49,14 +52,15 @@ namespace testfile
         /// <summary>
         /// [Obsolete]
         /// It has survived not only five centuries, but also the leap
+        /// This API is deprecated, please move to PSG API instead <see cref="Slb.Ocean.Petrel.StructuralGeology"/>
         /// into electronic typesetting, remaining essentially unchanged.
         /// It was popularised in the 1960s with the release of
         /// </summary>
         /// <exception cref="ArgumentException">
         /// </exception>
         [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-        public Point3 Corner(int which)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public Point3 Corner(int which/*here in the middle*/)
         {
             if (which > 3 || which < 0)
             {
@@ -68,11 +72,13 @@ namespace testfile
         /// <summary>
         /// [Obsolete]
         /// of type and scrambled it to make a type specimen book.
+        /// This API is deprecated, please move to PSG API instead <see cref="Slb.Ocean.Petrel.StructuralGeology"/>
         /// It has survived not only five centuries, but also the leap
         /// into electronic typesetting, remaining essentially unchanged.
         /// It was popularised in the 1960s with the release of
         /// </summary>
         [Obsolete("Obsolete in 2021.1, will be removed in 2022.1")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public int SizeI { get; private set; }
     };
 }

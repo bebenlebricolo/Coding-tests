@@ -8,6 +8,12 @@ from os.path import isdir, join
 from os import walk
 from enum import Enum
 
+import re
+from cscomments import CSCommentParser
+
+# Lists all necessary using statements for those modifications to work well
+necessary_using_statements = ["using System;", "using System.ComponentModel;"]
+
 def print_help() :
     print("C# documentation obsoleter usage : ")
     print("  This tool is capable of parsing block documentation comments from C# files and insert")
@@ -35,7 +41,6 @@ def check_help(args) :
     if needs_help :
         print_help()
 
-
 def list_cs_files_in_folder( foldername ):
     """ Iterates over the given folder and tries to list all available xml files"""
     foldername = os.path.realpath(foldername)
@@ -44,7 +49,7 @@ def list_cs_files_in_folder( foldername ):
         print_help()
 
     cs_files = list()
-    for dirpath, subdirs, files in walk(foldername) :
+    for dirpath, _ , files in walk(foldername) :
         for file in files :
             if file.endswith(".cs") :
                 relative_path = join(dirpath, file)
@@ -64,7 +69,7 @@ def resolve_padding(line:str):
             break
     return padding
 
-def is_line_comment(line : str):
+def is_doc_comment(line : str):
     if line.find("///") == -1 :
         return False
     else :
@@ -78,15 +83,42 @@ def is_using_statement(line : str):
 
 def generate_padding(padding : int):
     out = str()
-    for i in range(0, padding):
+    for _ in range(0, padding):
         out += ' '
     return out
 
+# a sample of CSharp keywords
+CSharpKeywords = [
+    "namespace",
+    "public",
+    "private",
+    "protected",
+    "abstract",
+    "interface",
+    "internal",
+    "sealed",
+    "class",
+    "struct",
+]
+
+class DocumentationBlock :
+    def __init__(self) :
+        self.has_obs_tag = False        # If this block has the [Obsolete] documentation tag
+        self.has_obs_attr = False       # If this block has the [Obsolete("lmqjdshgmqj")] attribute
+        self.start_line = 0             # starting line index
+        self.end_line = 0               # ending line index
+        self.needs_editor_attr = True   # Tells whether this block needs the editorbrowsable attribute
+        self.content = list()           # documentation block content
+
+    def add_line(self, line : str) :
+        self.content.append(line)
+
 class ModifiedContent :
     class Kind(Enum) :
-        ObsoleteTag = "/// [Obsolete]\n"
-        ObsoleteAttribute = "[Obsolete(\"Obsolete in 2021.1, will be removed in 2022.1\")]\n"
-        EditorAttribute = "[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]\n"
+        ObsoleteTag =       "/// [Obsolete]\n"
+        SeeCrefTag =        "/// This API is deprecated, <see cref=\"Placeholder.namespace\"/>\n"
+        ObsoleteAttribute = "[Obsolete(\"Obsolete in date A, will be removed in date B\")]\n"
+        EditorAttribute =   "[EditorBrowsable(EditorBrowsableState.Never)]\n"
 
     def __init__(self, line_count : int, content : Kind, padding : int) :
         self.line_count = line_count
@@ -96,101 +128,141 @@ class ModifiedContent :
     def generate(self):
         return generate_padding(self.padding) + self.content.value
 
+class ModifiedBlock :
+    def __init__(self):
+        self.content = list()
+        self.editor_browsable_found = False
+
 class CsDocParser :
     class Mode(Enum):
         Normal = 0
         Block = 1
         EditorTagSearch = 2
+        UsingStatements = 3
 
-    def __init__(self, file):
-        self.file = file
-        self.parsing_mode = self.Mode.Normal
-        self.data = list()
-        self.needs_using_system = True # Tells whether the locally inspected file needs the using System; import
-        self.using_block_start = -1
+    class CSFile:
+        def __init__(self, filepath, required_using):
+            self.file = filepath
+            self.parsed_using = list()      # list of using statements found in the parsed file
+            self.req_using = required_using # list of required using
+            self.last_using_line = 0        # Stores the last using statement line index
+
+    def __init__(self, file ):
+        self.csfile = self.CSFile(file,
+                                  necessary_using_statements)   # Keeps track of the parsed file with special handling for using statements
+        self.parsing_mode = self.Mode.UsingStatements           # Parsing mode (fed into the parsing state machine)
+        self.docblock = DocumentationBlock()                    # Currently parsed documentation block
+        self.data = list()                                      # list of DocumentationBlock
+        self.parser = CSCommentParser()
+        self.using_re_pattern = re.compile(r"using ([a-zA-Z]+[\.]*)+;")
 
     def parse(self):
-        if os.path.isfile(self.file) and self.tryopen(self.file) :
-            with open(self.file, 'r') as target_file:
+        if os.path.isfile(self.csfile.file) and self.tryopen(self.csfile.file) :
+            with open(self.csfile.file, 'r') as target_file:
                 line_count = 0
                 while True:
                     line = target_file.readline()
                     if not line :
+                        if len(self.data) != 0 and self.data[-1].editor_browsable_found == False :
+                            last_block = self.data[-1]
+                            last_line_count = last_block.content[-1].line_count
+                            last_padding = last_block.content[-1].padding
+                            last_block.content.append(ModifiedContent(last_line_count, ModifiedContent.Kind.EditorAttribute, last_padding))
                         break
 
                     # Parse the line and store data about it if it matches some patterns
                     self.parse_line(line, line_count)
                     line_count += 1
 
+    def handles_using_parsing(self, line : str , line_count : int) :
+        match = re.search(self.using_re_pattern, line)
+        if match is not None :
+            self.csfile.parsed_using.append(line)
+            self.csfile.last_using_line = line_count
+        else :
+            has_keyword = False
+            for keyword in CSharpKeywords :
+                if line.find(keyword) != -1:
+                    has_keyword = True
+                    break
+
+            # Get back to normal parsing, no more using might be found in the file
+            if has_keyword :
+                self.parsing_mode = self.Mode.Normal
+
+
     def parse_line(self, line : str, line_count : int):
-        is_comment = is_line_comment(line)
+        is_doc = is_doc_comment(line)
         padding = resolve_padding(line)
 
+        stripped_line = self.parser.parse_line(line, remove_comment=True).rstrip()
+
+        # Focuses on the "using statements"
+        # we use the stripped line because we don't want to parse using statements that are commented out!
+        if self.parsing_mode == self.Mode.UsingStatements :
+            self.handles_using_parsing(stripped_line, line_count)
+
         # Parse comments if any (starting/closing)
-        if self.parsing_mode == self.Mode.Normal :
+        elif self.parsing_mode == self.Mode.Normal :
             # Found block comment starting !
-            if is_comment and line.find("<summary>") != -1 :
+            if is_doc and line.find("<summary>") != -1 :
                 self.parsing_mode = self.Mode.Block
-                self.data.append(ModifiedContent(line_count + 1, ModifiedContent.Kind.ObsoleteTag, padding))
+
+                # before switching to block comment, check if last block had its editor browsable state
+                if len(self.data) != 0 and self.data[-1].editor_browsable_found == False:
+                    last_block = self.data[-1]
+                    last_line_count = last_block.content[-1].line_count
+                    last_padding = last_block.content[-1].padding
+                    last_block.content.append(ModifiedContent(last_line_count, ModifiedContent.Kind.EditorAttribute, last_padding))
+
+                new_block = ModifiedBlock()
+                new_block.content.append(ModifiedContent(line_count + 1, ModifiedContent.Kind.ObsoleteTag, padding))
+                # As this is a new insert, there is no need to do line_count +1 as we already have inserted one line before
+                # So the +1 is justified (same as above)
+                new_block.content.append(ModifiedContent(line_count + 1, ModifiedContent.Kind.SeeCrefTag, padding))
+                self.data.append(new_block)
+
+            elif line.find("EditorBrowsableState.Never") != -1 and len(self.data) != 0:
+                self.data[-1].editor_browsable_found = True
 
         # Block parsing triggered
         # Stop block parsing whenever lines are not commented anymore
-        elif not is_comment :
+        elif not is_doc :
             if self.parsing_mode == self.Mode.Block :
-                self.parsing_mode = self.Mode.EditorTagSearch
-                self.data.append(ModifiedContent(line_count, ModifiedContent.Kind.ObsoleteAttribute, padding))
+                self.data[-1].content.append(ModifiedContent(line_count, ModifiedContent.Kind.ObsoleteAttribute, padding))
 
-            # Check for EditorBrowsable attribute
-            elif self.parsing_mode == self.Mode.EditorTagSearch :
-                search_lines_count = (line_count - self.data[-1].line_count)
-                # Do not trigger attribute addition if one is found within 5 lines after switching off
-                # comment parsing
-                if search_lines_count < 3 :
-                    if line.find("System.ComponentModel.EditorBrowsableState.Never") != -1 :
-                        self.parsing_mode = self.Mode.Normal
-                else :
-                    self.parsing_mode = self.Mode.Normal
-                    last_line_count = self.data[-1].line_count
-                    last_padding = self.data[-1].padding
-                    self.data.append(ModifiedContent(last_line_count, ModifiedContent.Kind.EditorAttribute, last_padding))
+                if line.find("EditorBrowsableState.Never") != -1 and len(self.data) != 0:
+                    self.data[-1].editor_browsable_found = True
 
-        if is_using_statement(line) :
-            # Record where using block starts
-            if self.using_block_start == -1 :
-                self.using_block_start = line_count
-
-            if line.find("using System;") != -1 :
-                self.needs_using_system = False
+                self.parsing_mode = self.Mode.Normal
 
     def apply_modifications(self, duplicate : bool) :
-        outfilename = os.path.basename(self.file)
-        file_directory = os.path.dirname(self.file)
+        outfilename = os.path.basename(self.csfile.file)
+        file_directory = os.path.dirname(self.csfile.file)
         if duplicate :
             outfilename = outfilename.split(".cs")[0]
             outfilename = outfilename + "_mod.cs"
         outfile = os.path.join(file_directory, outfilename)
 
         filecontent = {}
-        with open(self.file, 'r') as target_file :
+        with open(self.csfile.file, 'r') as target_file :
             filecontent = target_file.readlines()
 
         added_lines = 0
-
         # Handles using System; import
-        if self.needs_using_system :
-            if self.using_block_start == -1 :
-                self.using_block_start = 0
+        if len(self.csfile.req_using) != 0 :
+            added_using = 0
+            for using in self.csfile.req_using :
+                filecontent.insert(self.csfile.last_using_line + added_using, using + "\n")
+                added_lines += 1
 
-            filecontent.insert(self.using_block_start, "using System;\n")
-            added_lines += 1
-
-        for new_line in self.data :
-            filecontent.insert(new_line.line_count + added_lines, new_line.generate())
-            added_lines += 1
+        for modified_content in self.data :
+            for new_line in modified_content.content :
+                filecontent.insert(new_line.line_count + added_lines, new_line.generate())
+                added_lines += 1
 
         with open(outfile, 'w') as out :
             out.writelines(filecontent)
-
 
 
     def tryopen(self, file):
@@ -206,12 +278,19 @@ class CsDocParser :
         return canopen
 
 
+"""@brief checks if the --duplicate option is part of the command line input
+   @param args : list of arguments parsed from command line
+"""
+def has_duplicate_option(args) :
+    for arg in args :
+        if arg == "-d" or arg == "--duplicate" :
+            return True
+    return False
+
 def main(args):
     check_help(args)
     cs_files = list_cs_files_in_folder(args[1])
-    needs_duplicate = False
-    if len(args) > 2 :
-        needs_duplicate = (args[2] == "-d") or (args[2] == "--duplicate")
+    needs_duplicate = has_duplicate_option(args)
     for csfile in cs_files :
         parser = CsDocParser(csfile)
         parser.parse()
