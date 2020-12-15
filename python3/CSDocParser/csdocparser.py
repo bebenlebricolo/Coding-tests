@@ -236,6 +236,13 @@ class CsDocParser :
 
                 self.parsing_mode = self.Mode.Normal
 
+    def resolve_needed_using(self) :
+        self.csfile.req_using = list()
+        for using in necessary_using_statements :
+            if not using in self.csfile.parsed_using :
+                self.csfile.req_using.append(using)
+
+
     def apply_modifications(self, duplicate : bool) :
         outfilename = os.path.basename(self.csfile.file)
         file_directory = os.path.dirname(self.csfile.file)
@@ -249,7 +256,9 @@ class CsDocParser :
             filecontent = target_file.readlines()
 
         added_lines = 0
+
         # Handles using System; import
+        self.resolve_needed_using()
         if len(self.csfile.req_using) != 0 :
             added_using = 0
             for using in self.csfile.req_using :
