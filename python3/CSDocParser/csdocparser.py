@@ -260,9 +260,10 @@ class CsDocParser :
         # Handles using System; import
         self.resolve_needed_using()
         if len(self.csfile.req_using) != 0 :
-            added_using = 0
+            added_using = 1
             for using in self.csfile.req_using :
                 filecontent.insert(self.csfile.last_using_line + added_using, using + "\n")
+                added_using += 1
                 added_lines += 1
 
         for modified_content in self.data :
