@@ -241,6 +241,8 @@ class CsDocParser :
         for using in necessary_using_statements :
             if not using in self.csfile.parsed_using :
                 self.csfile.req_using.append(using)
+        self.csfile.req_using = sorted(self.csfile.req_using, key=lambda obj : len(obj))
+
 
 
     def apply_modifications(self, duplicate : bool) :
