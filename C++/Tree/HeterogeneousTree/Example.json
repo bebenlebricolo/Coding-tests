@@ -1,0 +1,27 @@
+{
+    "name": "root",
+    "children" : [
+        {
+            "name" : "Boolean property",
+            "value" : "true"
+        } ,
+        {
+            "name" : "child node Nb 0",
+            "children" : [
+                {
+                    "name" : "Temp property #0",
+                    "value" : "0"
+                },
+                {
+                    "name" : "Temp property #1",
+                    "value" : "4"
+                },
+                {
+                    "name" : "Temp property #2",
+                    "value" : "8"
+                }
+            ]
+            }
+        ]
+    }
+}
