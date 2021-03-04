@@ -118,7 +118,7 @@ public:
     T get();
 
     std::vector<std::shared_ptr<TreeNode>>* get_list();
-    std::shared_ptr<TreeNode> add_child();
+    std::shared_ptr<TreeNode> add_node();
     std::shared_ptr<TreeNode> get_parent();
 
     template<typename T>
@@ -548,7 +548,7 @@ std::vector<std::shared_ptr<TreeNode>>* TreeNode::get_list()
     return out;
 }
 
-std::shared_ptr<TreeNode> TreeNode::add_child()
+std::shared_ptr<TreeNode> TreeNode::add_node()
 {
     std::shared_ptr<TreeNode>* out = nullptr;
     if (content.type != Content::Type::List)
