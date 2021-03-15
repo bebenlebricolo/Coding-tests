@@ -10,7 +10,12 @@ int main()
     #pragma omp parallel for reduction(+:sum_with_reduction)
     for (uint8_t i = 0 ; i < max ; i++ )
     {
-        sum_with_reduction += i * 2;
+        try
+        {
+            sum_with_reduction += i * 2;
+        }
+        catch(...)
+        {}
     }
 
     #pragma omp parallel for
