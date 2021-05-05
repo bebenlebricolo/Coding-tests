@@ -15,7 +15,6 @@ def print_help():
     print("    + python3 pxyz_convertor.py Horizon")
     print("    + python3 pxyz_convertor.py C:\\temp\\data\\Horizon\n")
 
-
 def convert_file(file):
     filepath = Path(file)
     if not filepath.exists() and not Path(Path(file).absolute).exists():
@@ -50,7 +49,6 @@ def convert_file(file):
         if len(in_line) == 0:
             continue
 
-
         in_line = re.sub(' +', ' ', in_line)
         blocks = in_line.split(' ')
         blocks= blocks[6:]
@@ -64,18 +62,11 @@ def convert_file(file):
             if index != 2 :
                 out_line += " "
             index += 1
-
         output_file.write(out_line + "\n")
-
-
 
     input_file.close()
     output_file.close()
-
     return "Successfully converted {} to {} !".format(input_filename, output_filename)
-
-
-
 
 def main(argv):
     if len(argv) != 2:
@@ -84,7 +75,6 @@ def main(argv):
     result = convert_file(argv[1])
     print(result)
     return 0
-
 
 if __name__ == "__main__":
     main(sys.argv)
