@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(simple_maths_tests)
 
 enable_testing()
-find_package(GTest REQUIRED)
+find_package(GTest REQUIRED)    
 
 # set(GTEST_BASE_FOLDER "C:\\Program Files (x86)\\googletest-distribution")
 # set(GTEST_DEBUG_LIBS_FOLDER "${GTEST_BASE_FOLDER}\\lib")

@@ -9,9 +9,9 @@
 *.lib
 
 # Build folders
-[Bb]uild/
-[Rr]elease/
-[Dd]ebug/
+[Bb]uild*/
+[Rr]elease*/
+[Dd]ebug*/
 
 # Archives
 *.zip
