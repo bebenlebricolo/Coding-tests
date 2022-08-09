@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{fs, mem::size_of_val};
-use std::io::Write;
-
+use std::fs;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Item<T>
@@ -155,10 +153,10 @@ impl Default for BeerModel {
 impl BeerModel {
     pub fn to_file(self, filepath : &std::path::Path) -> std::io::Result<()>
     {
-        let file = std::fs::File::options()
-        .write(true)
-        .create(true)
-        .open(filepath);
+        // let file = std::fs::File::options()
+        // .write(true)
+        // .create(true)
+        // .open(filepath);
 
         fs::write(filepath, serde_json::to_string(&self).unwrap())
     }
