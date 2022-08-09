@@ -2,6 +2,9 @@ use std::u64;
 use std::fs;
 use std::io::Write;
 
+/**
+ * Pixel structure, represents a pixel in a 3D space (x,y,z coordinates) and it carries a value
+ */
 struct Pixel
 {
     x : u64,
@@ -10,13 +13,18 @@ struct Pixel
     val : f64
 }
 
+/**
+ * @brief Image structure represents a 3D image
+ */
 struct Image
 {
     name : String,
     pixels : Vec<Pixel>
 }
 
-
+/**
+ * @brief Pixel implementations
+ */
 impl Pixel
 {
     fn to_binary(&self) -> [u8 ; 32]
