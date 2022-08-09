@@ -158,6 +158,6 @@ impl BeerModel {
         // .create(true)
         // .open(filepath);
 
-        fs::write(filepath, serde_json::to_string(&self).unwrap())
+        fs::write(filepath, serde_json::to_string_pretty(&self).unwrap())
     }
 }
