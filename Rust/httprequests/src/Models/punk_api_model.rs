@@ -53,14 +53,15 @@ pub struct Ingredients
     yeast : String
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BeerModel
 {
-    id : u64,
-    name : String,
-    tagline : String,
-    first_brewed : String,
-    description : String ,
+    id : u64,               /// Beer id, as per referenced un BrewDog's DIY Dog book
+    name : String,          /// Beer name, as per referenced un BrewDog's DIY Dog book
+    tagline : String,       /// Beer tagline, where style is often recorded (like belgian white beer)
+    first_brewed : String,  /// Date of the first brew-batch
+    description : String ,  /// Complete description of the beer
     image_url : String,
     abv : f64,
     ibu : Option<f64>,
