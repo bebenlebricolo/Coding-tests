@@ -23,3 +23,6 @@ __pycache__*
 
 # Rust targets
 target/*
+
+# Cache directories, if any
+*.cache*
