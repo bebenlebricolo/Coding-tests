@@ -1,0 +1,6 @@
+google-oauth2-tool
+google-cloud-core
+google-auth-oauthlib
+requests
+firebase-admin
+pyrebase
