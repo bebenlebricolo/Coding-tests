@@ -52,7 +52,7 @@ def generate_header(token : str) -> dict[str, str]:
 def check_service_account_ok(target_audience) -> bool:
     print("Authenticating using service account")
     this_dir = get_script_dir()
-    service_account_file =  this_dir.joinpath(SERVICE_ACCOUNT_DEFAULT_FILENAME)
+    service_account_file =  this_dir.joinpath("Config/" + SERVICE_ACCOUNT_DEFAULT_FILENAME)
     if SERVICE_ACCOUNT_FILE_ENV_VAR in os.environ :
         service_account_file = Path(os.environ[SERVICE_ACCOUNT_FILE_ENV_VAR])
 
@@ -78,7 +78,7 @@ def check_service_account_ok(target_audience) -> bool:
 def check_client_can_request_token(target_audience) -> bool :
     print("Authenticating using InstalledAppFlow auto OAuth handling")
     this_dir = get_script_dir()
-    client_secrets_file = this_dir.joinpath("client_secrets.json")
+    client_secrets_file = this_dir.joinpath("Config/client_secrets.json")
 
     if not client_secrets_file.exists() :
         print("Client secrets file does not exist")
@@ -125,7 +125,7 @@ def manual_token_generation(target_audience) -> bool :
     print("Trying manual OAuth2.0 authentication procedure")
 
     this_dir = get_script_dir()
-    client_secrets_filepath = this_dir.joinpath("client_secrets.json")
+    client_secrets_filepath = this_dir.joinpath("Config/client_secrets.json")
 
     if not client_secrets_filepath.exists() :
         print("Client secrets file does not exist")
@@ -246,7 +246,7 @@ def main():
     # Will be replaced by actual Cloud Run service endpoint from config file
     target_audience = "default"
 
-    test_service_filepath = this_dir.joinpath(TEST_SERVICE_CONFIG_FILENAME)
+    test_service_filepath = this_dir.joinpath("Config/" + TEST_SERVICE_CONFIG_FILENAME)
     with open(test_service_filepath, "r") as file :
         content = json.load(file)
         target_audience = content["name"]
