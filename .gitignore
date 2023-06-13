@@ -1,6 +1,7 @@
 # Config folders and metadatas
 .vscode/
 .vs/
+.venv
 
 # Executables and libraries
 *.exe
