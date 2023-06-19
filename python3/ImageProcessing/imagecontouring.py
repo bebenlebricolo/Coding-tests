@@ -8,7 +8,6 @@ from pathlib import Path
 
 from skimage import measure
 from skimage.draw import polygon
-import scipy.ndimage as ndimage
 
 from PIL import Image
 
