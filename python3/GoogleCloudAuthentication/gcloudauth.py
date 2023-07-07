@@ -166,7 +166,6 @@ def manual_token_generation(target_audience) -> bool :
 
     local_server.timeout = 360
     local_server.handle_request()
-
     # Note: using https here because oauthlib is very picky that
     # OAuth 2.0 should only occur over https.
     authorization_response = wsgi_app.last_request_uri
@@ -174,6 +173,8 @@ def manual_token_generation(target_audience) -> bool :
     auth_code = parsed_auth_response.split("code=")[1].split("&scope=")[0]
     #print("authorization response = " + authorization_response)
     #print("auth_code = " + auth_code)
+
+    local_server.server_close()
 
     token_url = client_secret_file.token_uri
     token_url += "?code=" + auth_code
@@ -188,7 +189,11 @@ def manual_token_generation(target_audience) -> bool :
     token_response = TokenFetchResponse()
     token_response.from_json(response.json())
 
+    decoded_token = jwt.decode(token_response.id_token, options={"verify_signature": False} )
+    print("Successfully retrieved token for user {}\n\n".format(decoded_token["name"]))
+    print(token_response.id_token)
 
+    print("Trying to ping remote cloud run service")
     headers = generate_header(token_response.id_token)
     response = requests.get(target_audience, headers=headers)
     if response.status_code != 200 :
@@ -199,8 +204,6 @@ def manual_token_generation(target_audience) -> bool :
     with open(html_page_file, 'w') as file :
         file.write(html_returned_page)
 
-    decoded_token = jwt.decode(token_response.id_token, options={"verify_signature": False} )
-    print("Successfully retrieved token for user {}\n\n".format(decoded_token["name"]))
     return True
 
 
