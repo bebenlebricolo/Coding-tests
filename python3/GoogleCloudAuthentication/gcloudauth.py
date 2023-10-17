@@ -1,6 +1,8 @@
 import json
 import os
 import jwt
+import argparse
+import sys
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,21 +60,16 @@ def check_service_account_ok(target_audience) -> bool:
 
     if not service_account_file.exists() :
         print("Service account file {} does not exist.".format(service_account_file))
-        return 1
+        return False
 
     credentials = service_account.IDTokenCredentials.from_service_account_file(service_account_file, target_audience=target_audience)
     request = Request()
     credentials.refresh(request)
     token = credentials.token
 
-    headers = generate_header(token)
-    response = requests.get(target_audience, headers=headers)
-    if response.status_code != 200 :
-        print("Failed to authenticate service account")
-        return False
-
     decoded_token = jwt.decode(token,  options={"verify_signature": False})
     print("Successfully retrieved token for service account {}\n\n".format(decoded_token["email"]))
+    print("Token : \n\n" + token)
     return True
 
 def check_client_can_request_token(target_audience) -> bool :
@@ -244,6 +241,15 @@ class _RedirectWSGIApp(object):
 
 
 def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("kind", default="All", choices=["None", "Service", "Manual", "Auto"])
+    arguments = parser.parse_args(sys.argv[1:])
+
+    # Find the kind mode
+    kind = arguments.kind
+    print(f"Token generation mode is set to : {kind}")
+
     this_dir = Path(__file__).parent
 
     # Will be replaced by actual Cloud Run service endpoint from config file
@@ -253,9 +259,26 @@ def main():
     with open(test_service_filepath, "r") as file :
         content = json.load(file)
         target_audience = content["name"]
-    success = manual_token_generation(target_audience)
-    success &= check_client_can_request_token(target_audience)
-    success &= check_service_account_ok(target_audience)
+
+
+    match kind :
+        case "All" :
+            success = manual_token_generation(target_audience)
+            success &= check_client_can_request_token(target_audience)
+            success &= check_service_account_ok(target_audience)
+
+        case "Service" :
+            success = check_service_account_ok(target_audience)
+
+        case "Manual" :
+            success = manual_token_generation(target_audience)
+
+        case "Auto":
+            success = check_client_can_request_token(target_audience)
+
+        case _:
+            print("Wrong mode selected")
+
 
 if __name__ == "__main__" :
     exit(main())
