@@ -1,6 +1,7 @@
 # Config folders and metadatas
 .vscode/
 .vs/
+.venv
 
 # Executables and libraries
 *.exe
@@ -9,9 +10,9 @@
 *.lib
 
 # Build folders
-[Bb]uild/
-[Rr]elease/
-[Dd]ebug/
+[Bb]uild*/
+[Rr]elease*/
+[Dd]ebug*/
 
 # Archives
 *.zip
@@ -21,4 +22,8 @@
 __pycache__/*
 __pycache__*
 
-Rust/**/target
+# Rust targets
+target/*
+
+# Cache directories, if any
+*.cache*
